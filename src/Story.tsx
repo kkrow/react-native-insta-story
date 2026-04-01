@@ -46,6 +46,9 @@ export const Story = ({
   avatarImageStyle,
   avatarWrapperStyle,
   avatarFlatListProps,
+  isVisible,
+  initialIndex = 0,
+  onFinish
 }: StoryProps) => {
   const [dataState, setDataState] = useState<IUserStory[]>(data);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -64,6 +67,12 @@ export const Story = ({
     setSelectedData(newData);
     setIsModalOpen(true);
   };
+
+  useEffect(() => {
+    if (dataState && dataState.length > 0 && isVisible) {
+      _handleStoryItemPress(dataState[0], initialIndex);
+    }
+  }, [isVisible, initialIndex]);
 
   useEffect(() => {
     handleSeen();
@@ -107,6 +116,9 @@ export const Story = ({
     if (!isNullOrWhitespace(state)) {
       if (state == 'next') {
         const newPage = currentPage + 1;
+        if (onFinish && selectedData[currentPage]) {
+          onFinish(selectedData[currentPage]);
+        }
         if (newPage < selectedData.length) {
           setCurrentPage(newPage);
           cube?.current?.scrollTo(newPage);

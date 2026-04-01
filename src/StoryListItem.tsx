@@ -1,26 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { Image } from 'expo-image';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Image,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  TouchableWithoutFeedback,
   ActivityIndicator,
-  View,
+  Animated,
+  Dimensions,
+  Easing,
   Platform,
   SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 import GestureRecognizer from 'react-native-swipe-gestures';
-
-import { usePrevious, isNullOrWhitespace, getStoryMediaType } from './helpers';
+import Video from 'react-native-video';
+import { convert } from 'react-native-video-cache-turbo';
+import { getStoryMediaType, isNullOrWhitespace, usePrevious } from './helpers';
 import {
   IUserStoryItem,
   NextOrPrevious,
   StoryListItemProps,
 } from './interfaces';
-import Video from 'react-native-video';
 
 const { width, height } = Dimensions.get('window');
 
@@ -122,6 +123,24 @@ export const StoryListItem = ({
     prevCurrentRef.current = current;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
+
+  const onProgress = useCallback((e: { currentTime: number }) => {
+    const dur = videoDurationRef.current;
+    if (dur <= 0) return;
+
+    const ratio = Math.min(e.currentTime / dur, 1);
+    const remaining = 1 - ratio;
+
+    // Чем ближе к концу — тем короче анимация
+    const duration = remaining < 0.05 ? 100 : 400;
+
+    Animated.timing(progress, {
+      toValue: ratio,
+      duration,
+      easing: Easing.linear,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
 
   const currentMediaType = getStoryMediaType(content[current]);
   const isVideo = currentMediaType === 'video' && Video;
@@ -237,11 +256,11 @@ export const StoryListItem = ({
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.backgroundContainer}>
-          {shouldRenderVideo && Video ? (
+          {shouldRenderVideo && Video && content[current].story_video ? (
             <View style={styles.videoWrapper}>
               <Video
                 key={content[current].story_id}
-                source={{ uri: content[current].story_video }}
+                source={{ uri: convert(content[current].story_video) }}
                 resizeMode="cover"
                 poster={
                   content[current].story_image
@@ -255,12 +274,7 @@ export const StoryListItem = ({
                   videoDurationRef.current = d;
                   start();
                 }}
-                onProgress={(e: { currentTime: number }) => {
-                  const dur = videoDurationRef.current;
-                  if (dur > 0) {
-                    progress.setValue(e.currentTime / dur);
-                  }
-                }}
+                onProgress={onProgress}
                 onEnd={() => next()}
                 onError={() => start()}
                 paused={isInteractionPaused}
@@ -280,7 +294,7 @@ export const StoryListItem = ({
               key={content[current].story_id}
               source={{ uri: content[current].story_image }}
               style={[styles.image, storyImageStyle]}
-              resizeMode="cover"
+              contentFit="cover"
             />
           ) : content[current].story_image ? (
             <Image

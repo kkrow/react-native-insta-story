@@ -236,4 +236,9 @@ export interface StoryProps {
   storyAvatarImageStyle?: ImageStyle;
   /** Custom styles for the main story item container */
   storyContainerStyle?: ViewStyle;
+  /** Whether the story is currently visible */
+  isVisible?: boolean;
+  /** The index of the story to show initially */
+  initialIndex?: number;
+  onFinish?: (userStory: IUserStory) => any;
 }
