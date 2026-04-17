@@ -1,17 +1,18 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import {
-  BackHandler,
-  Dimensions,
-  Platform,
-  StyleSheet,
-  View,
+    BackHandler,
+    Dimensions,
+    Platform,
+    StyleSheet,
+    View,
 } from 'react-native';
 import Modal from 'react-native-modalbox';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StoryCircleListView from './StoryCircleListView';
 import StoryListItem from './StoryListItem';
 import CubeNavigationHorizontal, {
-  CubeNavigationHorizontalRef,
+    CubeNavigationHorizontalRef,
 } from './components/CubeNavigationHorizontal';
 import { isNullOrWhitespace } from './helpers';
 import { IUserStory, NextOrPrevious, StoryProps } from './interfaces';
@@ -55,7 +56,7 @@ export const Story = ({
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [selectedData, setSelectedData] = useState<IUserStory[]>([]);
   const cube = useRef<CubeNavigationHorizontalRef | null>(null);
-
+  const { top } = useSafeAreaInsets();
   // Component Functions
   const _handleStoryItemPress = (item: IUserStory, index?: number) => {
     const newData = dataState.slice(index);
